@@ -10,4 +10,7 @@ reserves = Table('reserves', metadata,
     Column('fallback', String(160), nullable=False),
     Column('mae', Float, nullable=False),
     Column('token', String(64), nullable=False, unique=True),
+    # 核算所用新表号，以及每小时实际取用的表号 [[hour, meter], ...]。
+    Column('meter', String(160), nullable=True),
+    Column('meters', JSON, nullable=True),
 )

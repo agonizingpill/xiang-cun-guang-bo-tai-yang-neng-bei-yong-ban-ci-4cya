@@ -8,8 +8,9 @@
 
 - 节目时段表 `airslots`，字段为 `title`（节目）、`hour`（起播小时）、`license`（节目源许可）、`offline`（离线时段）。模型约束位于 `backend/domain/airslots_model.py`，规则位于 `airslots_service.py`。
 - 蓄电班记与测量 `battery_logs`，字段为 `meter`（电表编号）、`hour`（两日内整点）、`load_wh`（用量 Wh）、`clear`（天空晴）、`verified`（抄表审核）。模型约束位于 `backend/domain/battery_logs_model.py`，规则位于 `battery_logs_service.py`。
-- 备用分钟核算 `reserves`，字段为 `airslot`（节目时段）、`plan_wh`（计划备用 Wh）、`fallback`（备用源优先级）、`mae`（时间验证MAE Wh）、`token`（计算号）。模型约束位于 `backend/domain/reserves_model.py`，规则位于 `reserves_service.py`。
+- 备用分钟核算 `reserves`，字段为 `airslot`（节目时段）、`plan_wh`（计划备用 Wh）、`fallback`（备用源优先级）、`mae`（时间验证MAE Wh）、`token`（计算号）、`meter`（核算新表号）、`meters`（每小时表号）。模型约束位于 `backend/domain/reserves_model.py`，规则位于 `reserves_service.py`。
 - 班组备播卡 `switchcards`，字段为 `reserve`（备用评估）、`source`（实际时钟源）、`approved_wh`（锁定备用 Wh）、`state`（状态）。模型约束位于 `backend/domain/switchcards_model.py`，规则位于 `switchcards_service.py`。
+- 电池换表交割 `meter_switches`，字段为 `old_meter`（旧表）、`new_meter`（新表）、`handover_hour`（交割小时）、`approved`（已审签）、`approved_by`（审签人）。模型约束位于 `backend/domain/meter_switches_model.py`，规则位于 `meter_switches_service.py`。
 
 团队为模拟的6 人广播合作社值守组，负责两个电源档位的备播。
 
@@ -26,6 +27,13 @@
 5. 15:00 签发 RV-24 备用电量评估。
 6. 17:45 台外时钟请求被拦后改用本地时钟。
 7. 22:10 持 WR-77 完成闭台交接。
+
+换表日另有交割流程：
+
+1. 作业员提交换表交割 `MS-24`，写明旧表、新表与交割小时；读数未补齐时也可先提交。
+2. 复核员审签，同一旧表同时提交多份时只认先审签的一份；交割前取旧表、交割小时起取新表。
+3. 晚到的抄表记录经审签后补进各自那段；缺小时时核算暂停，并指出缺哪块表、几点。
+4. 备用核算页按新表号发起，接齐后按原规则回测和预测，结果按小时记录当时使用的表号。
 
 ## 启动
 
@@ -53,6 +61,7 @@ Compose 运行 Nginx、Python FastAPI、独立 Redis 消费进程、SQL 数据�
 |---|---|---|
 | 节目时段表 | `/airslots` /airslots/mark-offline | `frontend/src/pages/airslots.js` |
 | 蓄电班记与测量 | `/battery_logs` /battery_logs/log-charge，/battery_logs/approve-meter | `frontend/src/pages/battery_logs.js` |
+| 电池换表与交割 | `/meter_switches` /meter_switches/submit-switch，/meter_switches/approve-switch | `frontend/src/pages/meter_switches.js` |
 | 备用分钟核算 | `/reserves` /reserves/forecast-wh，/reserves/save-reserve | `frontend/src/pages/reserves.js` |
 | 班组备播卡 | `/switchcards` /switchcards/issue-switch，/switchcards/handover | `frontend/src/pages/switchcards.js` |
 

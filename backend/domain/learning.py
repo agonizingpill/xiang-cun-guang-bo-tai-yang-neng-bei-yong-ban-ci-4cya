@@ -15,5 +15,7 @@ def calculate(data):
     predicted=model.predict([design(x['hour'],x['clear']) for x in held])
     target=float(model.predict([design(data['window']['hour'],data['clear'])])[0])
     mae=float(mean_absolute_error(actual,predicted))
+    hour_map=data.get('hour_map') or [[x['hour'],x.get('meter')] for x in rows]
     return {'mae':round(mae,3),'plan_wh':round(max(target,0)+mae,3),'held_out':len(held),
-           'period':24,'training':len(train)}
+           'period':24,'training':len(train),'meter':data.get('meter'),
+           'hour_map':hour_map}
